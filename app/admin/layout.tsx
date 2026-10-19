@@ -71,7 +71,17 @@ export default async function AdminLayout({
           <form
             action={async () => {
               "use server";
-              await signOut({ redirectTo: "/" });
+              try {
+                const { cookies } = await import("next/headers");
+                const cookieStore = await cookies();
+                cookieStore.delete("sg_admin_session");
+              } catch {}
+              try {
+                await signOut({ redirectTo: "/" });
+              } catch {
+                const { redirect } = await import("next/navigation");
+                redirect("/");
+              }
             }}
           >
             <button className="flex items-center gap-1 rounded-lg bg-red-500/20 px-3 py-1.5 font-semibold text-red-300 hover:bg-red-500/30 transition-all">

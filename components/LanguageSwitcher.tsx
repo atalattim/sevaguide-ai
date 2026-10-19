@@ -16,7 +16,11 @@ export default function LanguageSwitcher({ lang }: { lang: Lang }) {
     } catch {
       // Ignore client track fail
     }
-    router.refresh();
+    try {
+      window.location.reload();
+    } catch {
+      router.refresh();
+    }
   };
 
   return (

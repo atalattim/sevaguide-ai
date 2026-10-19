@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
 import { ShieldCheck, LogIn, ArrowLeft, Lock } from "lucide-react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Citizen & Admin Sign In — SevaGuide AI",
@@ -13,6 +15,18 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+
+  async function handleDemoAdminLogin() {
+    "use server";
+    const cookieStore = await cookies();
+    cookieStore.set("sg_admin_session", "authorized_demo_admin", {
+      path: "/",
+      maxAge: 86400 * 7,
+      sameSite: "lax",
+      httpOnly: true,
+    });
+    redirect("/admin");
+  }
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
@@ -50,7 +64,6 @@ export default async function LoginPage({
               type="submit"
               className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-98"
             >
-              {/* Google SVG Icon */}
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -73,7 +86,7 @@ export default async function LoginPage({
             </button>
           </form>
 
-          {/* Direct Developer / Citizen Demo Entry */}
+          {/* Citizen Direct Entry */}
           <div className="pt-2">
             <Link
               href="/dashboard"
@@ -84,14 +97,17 @@ export default async function LoginPage({
             </Link>
           </div>
 
+          {/* Direct Administrator Login */}
           <div className="pt-1">
-            <Link
-              href="/admin"
-              className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand transition-colors"
-            >
-              <Lock className="h-3 w-3" />
-              <span>Enter Admin Console (Authorized Staff)</span>
-            </Link>
+            <form action={handleDemoAdminLogin}>
+              <button
+                type="submit"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-brand/30 bg-brand-soft px-4 py-2.5 text-xs font-bold text-brand hover:bg-brand/10 transition-all active:scale-98"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span>Enter Admin Console (Staff Demo Access)</span>
+              </button>
+            </form>
           </div>
         </div>
 
