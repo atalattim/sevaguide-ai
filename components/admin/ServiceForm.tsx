@@ -143,9 +143,9 @@ export default function ServiceForm({ id, initial }: { id?: string; initial: F }
         <label className="block space-y-1">
           <span className="text-xs font-bold text-navy-900">Verification Status</span>
           <select value={f.status} onChange={set("status")} className={inp}>
-            <option>VERIFIED</option>
-            <option>NEEDS_VERIFICATION</option>
-            <option>DEMO</option>
+            <option value="VERIFIED">VERIFIED</option>
+            <option value="NEEDS_VERIFICATION">NEEDS_VERIFICATION</option>
+            <option value="DEMO">DRAFT</option>
           </select>
         </label>
 

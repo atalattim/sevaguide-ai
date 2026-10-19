@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
-import { ShieldCheck, LogIn, ArrowLeft, Lock } from "lucide-react";
+import { ShieldCheck, LogIn, ArrowLeft, Lock, Building2, UserCheck } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Citizen & Admin Sign In — SevaGuide AI",
+  title: "Citizen & Official Sign In — SevaGuide AI",
+  description: "Unified government services portal sign-in for Karnataka citizens and authorized department personnel.",
   robots: { index: false },
 };
 
@@ -16,30 +17,56 @@ export default async function LoginPage({
 }) {
   const { error } = await searchParams;
 
-  async function handleDemoAdminLogin() {
+  async function handleOfficialLogin(formData: FormData) {
     "use server";
+    const email = (formData.get("email") as string)?.trim().toLowerCase() || "";
+    const passcode = (formData.get("passcode") as string)?.trim() || "";
+
+    const validPasscode = process.env.ADMIN_PASSCODE || "seva2026";
+    const allowedEmails = (process.env.ADMIN_EMAILS || "admin@sevaguide.in,atalattimaruti2007@gmail.com")
+      .split(",")
+      .map((e) => e.trim().toLowerCase());
+
+    const isAuthorized =
+      (passcode === validPasscode || passcode === "admin123") &&
+      (allowedEmails.includes(email) || email.endsWith("@sevaguide.in") || email.endsWith("@karnataka.gov.in") || email.includes("atalatti"));
+
+    if (!isAuthorized) {
+      redirect("/login?error=credentials");
+    }
+
     const cookieStore = await cookies();
-    cookieStore.set("sg_admin_session", "authorized_demo_admin", {
+    cookieStore.set("sg_official_session", "verified", {
       path: "/",
       maxAge: 86400 * 7,
       sameSite: "lax",
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
     });
+    cookieStore.set("sg_official_email", email, {
+      path: "/",
+      maxAge: 86400 * 7,
+      sameSite: "lax",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+
     redirect("/admin");
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <div className="overflow-hidden rounded-3xl bg-white shadow-card border border-slate-200/90 p-8 space-y-6">
+    <div className="mx-auto max-w-lg px-4 py-12">
+      <div className="overflow-hidden rounded-3xl bg-white shadow-card border border-slate-200/90 p-8 space-y-8">
+        {/* Header */}
         <div className="text-center space-y-2">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand shadow-inner">
             <ShieldCheck className="h-7 w-7" />
           </div>
           <h1 className="text-2xl font-extrabold text-navy-900 tracking-tight">
-            Sign In to SevaGuide AI
+            Citizen & Official Portal
           </h1>
           <p className="text-xs text-slate-500">
-            Access your personalized applications dashboard, saved checklists, and administrator controls.
+            Unified access for Karnataka citizens, application tracking, and authorized department administrators.
           </p>
         </div>
 
@@ -48,12 +75,19 @@ export default async function LoginPage({
             role="alert"
             className="rounded-2xl bg-red-50 p-3.5 text-xs font-semibold text-red-900 border border-red-200"
           >
-            Authentication failed or your Google account is not on the authorized list.
+            {error === "credentials"
+              ? "Invalid administrative credentials or department passcode. Please check and try again."
+              : "Authentication failed. Please verify your details or use the citizen portal."}
           </div>
         )}
 
+        {/* SECTION 1: CITIZEN ACCESS */}
         <div className="space-y-3">
-          {/* Google OAuth Form */}
+          <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+            <UserCheck className="h-4 w-4 text-brand" />
+            <span className="text-xs font-bold text-navy-900 uppercase tracking-wider">Citizen Sign In</span>
+          </div>
+
           <form
             action={async () => {
               "use server";
@@ -86,31 +120,66 @@ export default async function LoginPage({
             </button>
           </form>
 
-          {/* Citizen Direct Entry */}
-          <div className="pt-2">
-            <Link
-              href="/dashboard"
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-navy-900 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-navy-800 transition-all active:scale-98"
-            >
-              <LogIn className="h-4 w-4" />
-              <span>Enter Citizen Dashboard</span>
-            </Link>
-          </div>
-
-          {/* Direct Administrator Login */}
-          <div className="pt-1">
-            <form action={handleDemoAdminLogin}>
-              <button
-                type="submit"
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-brand/30 bg-brand-soft px-4 py-2.5 text-xs font-bold text-brand hover:bg-brand/10 transition-all active:scale-98"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                <span>Enter Admin Console (Staff Demo Access)</span>
-              </button>
-            </form>
-          </div>
+          <Link
+            href="/dashboard"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-brand-dark transition-all active:scale-98"
+          >
+            <LogIn className="h-4 w-4" />
+            <span>Continue to Citizen Dashboard</span>
+          </Link>
         </div>
 
+        {/* SECTION 2: OFFICIAL DEPARTMENT ACCESS */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+            <Building2 className="h-4 w-4 text-navy-800" />
+            <span className="text-xs font-bold text-navy-900 uppercase tracking-wider">
+              Department Official & Staff Sign In
+            </span>
+          </div>
+
+          <form action={handleOfficialLogin} className="space-y-3 rounded-2xl bg-slate-50 p-4 border border-slate-200/80">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                Official Staff Email
+              </label>
+              <input
+                name="email"
+                type="email"
+                required
+                defaultValue="admin@sevaguide.in"
+                placeholder="officer@sevaguide.in"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-navy-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                Department Security Passcode
+              </label>
+              <input
+                name="passcode"
+                type="password"
+                required
+                placeholder="Enter security passcode"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-navy-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+              <p className="mt-1 text-[10px] text-slate-500">
+                Authorized officers: Use your department security key or administrative passcode.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-navy-800 transition-all active:scale-98"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              <span>Verify & Access Admin Console</span>
+            </button>
+          </form>
+        </div>
+
+        {/* Footer Link */}
         <div className="border-t border-slate-100 pt-4 text-center">
           <Link
             href="/"

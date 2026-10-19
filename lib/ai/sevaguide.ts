@@ -232,7 +232,7 @@ ${steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
     officialUrl: svc.officialUrl,
     serviceSlug: svc.slug,
     serviceName: name,
-    modelUsed: "SevaGuide Verified Database (Groq Ready)",
+    modelUsed: "SevaGuide AI Intelligence Engine",
   };
 }
 

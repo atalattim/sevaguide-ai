@@ -203,7 +203,7 @@ export default async function AdminHomePage({
             <option value="">Any Status</option>
             <option value="VERIFIED">VERIFIED</option>
             <option value="NEEDS_VERIFICATION">NEEDS_VERIFICATION</option>
-            <option value="DEMO">DEMO</option>
+            <option value="DEMO">DRAFT</option>
           </select>
           <button
             type="submit"
