@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceStatus {
+  DEMO
+  NEEDS_VERIFICATION
+  VERIFIED
+}
+
+// Localized JSON shapes: text fields -> { "en": "...", "kn": "..." }, list fields -> { "en": [...], "kn": [...] }
+model GovernmentService {
+  id              String        @id @default(cuid())
+  name            String
+  nameKn          String?
+  slug            String        @unique
+  description     Json
+  state           String        // "Karnataka" | "Central"
+  department      String
+  category        String
+  eligibility     Json
+  documents       Json
+  applicationSteps Json
+  commonMistakes  Json?
+  fees            Json?         // only when verified
+  processingInfo  Json?         // only when verified
+  officialUrl     String?
+  sourceUrl       String?
+  language        String        @default("en,kn")
+  lastVerifiedAt  DateTime?
+  status          ServiceStatus @default(DEMO)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([state, category])
+  @@index([status])
+}
+
+// Anonymous product analytics: no user id, no IP, no query text.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String?
+  lang      String?
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+}
